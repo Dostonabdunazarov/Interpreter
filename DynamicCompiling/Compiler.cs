@@ -111,13 +111,27 @@ namespace Lab3.DynamicCompiling {
 			statement.Accept(this);
 		}
 		public void VisitIf(If ifStatement) {
-			throw new NotImplementedException();
+			var endifNop = Instruction.Create(OpCodes.Nop);
+			CompileExpression(ifStatement.Condition);
+			EmitRuntimeCall(nameof(Op.ToBool));
+			cil.Emit(OpCodes.Brfalse, endifNop);
+			CompileBlock(ifStatement.Body);
+			cil.Append(endifNop);
 		}
 		public void VisitWhile(While whileStatement) {
-			throw new NotImplementedException();
+			var endWhileNop = Instruction.Create(OpCodes.Nop);
+			var startWhileNop = Instruction.Create(OpCodes.Nop);
+			cil.Append(startWhileNop);
+			CompileExpression(whileStatement.Condition);
+			EmitRuntimeCall(nameof(Op.ToBool));
+			cil.Emit(OpCodes.Brfalse, endWhileNop);
+			CompileBlock(whileStatement.Body);
+			cil.Emit(OpCodes.Br, startWhileNop);
+			cil.Append(endWhileNop);
 		}
 		public void VisitExpressionStatement(ExpressionStatement expressionStatement) {
-			throw new NotImplementedException();
+			CompileExpression(expressionStatement.Expr);
+			cil.Emit(OpCodes.Pop);
 		}
 		public void VisitVariableDeclaration(VariableDeclaration variableDeclaration) {
 			CompileExpression(variableDeclaration.Expr);
@@ -145,7 +159,11 @@ namespace Lab3.DynamicCompiling {
 			currentScope = variabeScope;
 		}
 		public void VisitVariableAssignment(VariableAssignment variableAssignment) {
-			throw new NotImplementedException();
+			if (!variables.TryGetValue(variableAssignment.VariableName, out var variable)) {
+				throw MakeError(variableAssignment.OperatorToken.BeginOffset, $"Присваивание в неизвестную переменную {variableAssignment.VariableName}");
+			}
+			CompileExpression(variableAssignment.Expr);
+			cil.Emit(OpCodes.Stloc, variable);
 		}
 		#endregion
 		#region expressions
@@ -154,19 +172,61 @@ namespace Lab3.DynamicCompiling {
 			expression.Accept(this);
 		}
 		public void VisitBinary(Binary binary) {
-			throw new NotImplementedException();
+			CompileExpression(binary.Left);
+			CompileExpression(binary.Right);
+			switch (binary.Operator) {
+				case BinaryOperator.Addition:
+					EmitRuntimeCall(nameof(Op.Add));
+					break;
+				case BinaryOperator.Subtraction:
+					EmitRuntimeCall(nameof(Op.Sub));
+					break;
+				case BinaryOperator.Multiplication:
+					EmitRuntimeCall(nameof(Op.Mul));
+					break;
+				case BinaryOperator.Division:
+					EmitRuntimeCall(nameof(Op.Div));
+					break;
+				case BinaryOperator.Remainder:
+					EmitRuntimeCall(nameof(Op.Rem));
+					break;
+				case BinaryOperator.Equal:
+					EmitRuntimeCall(nameof(Op.Eq));
+					break;
+				case BinaryOperator.Less:
+					EmitRuntimeCall(nameof(Op.Lt));
+					break;
+				default:
+					throw MakeError(binary.OperatorToken.BeginOffset, $"Неизвестная операция {binary.Operator}");
+			}
 		}
 		public void VisitCall(Call call) {
-			throw new NotImplementedException();
+			CompileExpression(call.Function);
+			cil.Emit(OpCodes.Ldc_I4, call.Arguments.Count);
+			cil.Emit(OpCodes.Newarr, module.TypeSystem.Object);
+			for (int i = 0; i < call.Arguments.Count; i++) {
+				cil.Emit(OpCodes.Dup);
+				cil.Emit(OpCodes.Ldc_I4, i);
+				CompileExpression(call.Arguments[i]);
+				cil.Emit(OpCodes.Stelem_Ref);
+			}
+			EmitRuntimeCall(nameof(Op.Call));
 		}
 		public void VisitParentheses(Parentheses parentheses) {
-			throw new NotImplementedException();
+			CompileExpression(parentheses.Expr);
 		}
 		public void VisitNumber(Number number) {
-			throw new NotImplementedException();
+			if (!int.TryParse(number.Lexeme, out int value)) {
+				throw MakeError(number.BeginOffset, $"Не удалось преобразовать переменную {number.Lexeme} в int");
+			}
+			cil.Emit(OpCodes.Ldc_I4, value);
+			cil.Emit(OpCodes.Box, module.TypeSystem.Int32);
 		}
 		public void VisitIdentifier(Identifier identifier) {
-			throw new NotImplementedException();
+			if (!variables.TryGetValue(identifier.Name, out var value)) {
+				throw MakeError(identifier.BeginOffset, $"Неизвестная переменная {identifier.Name}");
+			}
+			cil.Emit(OpCodes.Ldloc, value);
 		}
 		public void VisitMemberAccess(MemberAccess memberAccess) {
 			throw new NotSupportedException();
