@@ -171,6 +171,25 @@ namespace Lab3.DynamicCompiling {
 			InsertSequencePoint(expression.BeginOffset, expression.EndOffset);
 			expression.Accept(this);
 		}
+		public void VisitUnary(Unary unary) {
+			CompileExpression(unary.Value);
+			switch (unary.Operator) {
+				case UnaryOperator.UnaryPlus:
+					EmitRuntimeCall(nameof(Op.UnaryPlus));
+					break;
+				case UnaryOperator.UnaryMinus:
+					EmitRuntimeCall(nameof(Op.UnaryMinus));
+					break;
+				case UnaryOperator.BitwiseNegation:
+					EmitRuntimeCall(nameof(Op.BitwiseNegation));
+					break;
+				case UnaryOperator.LogicalNegation:
+					EmitRuntimeCall(nameof(Op.LogicalNegation));
+					break;
+				default:
+					throw MakeError(unary.OperatorToken.BeginOffset, $"Неизвестная операция {unary.Operator}");
+			}
+		}
 		public void VisitBinary(Binary binary) {
 			CompileExpression(binary.Left);
 			CompileExpression(binary.Right);

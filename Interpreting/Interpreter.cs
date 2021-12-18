@@ -143,6 +143,36 @@ namespace Lab3.Interpreting {
 			Assert(binary.Operator == BinaryOperator.Less);
 			return Op.Lt(Calc(binary.Left), Calc(binary.Right));
 		}
+		public object VisitUnary(Unary unary) {
+			switch (unary.Operator) {
+				case UnaryOperator.UnaryPlus:
+					return CalcUnaryPlus(unary);
+				case UnaryOperator.UnaryMinus:
+					return CalcUnaryMinus(unary);
+				case UnaryOperator.BitwiseNegation:
+					return CalcBitwiseNegation(unary);
+				case UnaryOperator.LogicalNegation:
+					return CalcLogicalNegation(unary);
+				default:
+					throw MakeError(unary.OperatorToken.BeginOffset, $"Неизвестная операция {unary.Operator}");
+			}
+		}
+		object CalcUnaryPlus(Unary unary) {
+			Assert(unary.Operator == UnaryOperator.UnaryPlus);
+			return Op.UnaryPlus(Calc(unary.Value));
+		}
+		object CalcUnaryMinus(Unary unary) {
+			Assert(unary.Operator == UnaryOperator.UnaryMinus);
+			return Op.UnaryMinus(Calc(unary.Value));
+		}
+		object CalcBitwiseNegation(Unary unary) {
+			Assert(unary.Operator == UnaryOperator.BitwiseNegation);
+			return Op.BitwiseNegation(Calc(unary.Value));
+		}
+		object CalcLogicalNegation(Unary unary) {
+			Assert(unary.Operator == UnaryOperator.LogicalNegation);
+			return Op.LogicalNegation(Calc(unary.Value));
+		}
 		#endregion
 		public object VisitParentheses(Parentheses parentheses) {
 			return Calc(parentheses.Expr);

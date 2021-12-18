@@ -30,7 +30,10 @@ Additive:
 	Additive ("+" | "-") Multiplicative
 	Multiplicative
 Multiplicative:
-	Multiplicative ("*" | "/" | "%") Primary
+	Multiplicative ("*" | "/" | "%") Unary
+	Unary
+Unary:
+	('+' | '-' | '!' | '~') Unary
 	Primary
 // Primary: Primitive ('(' Arguments? ')' | '.' Identifier)*
 Primary:

@@ -47,6 +47,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ast\BaseNode.cs" />
+    <Compile Include="Ast\Expressions\Unary.cs" />
+    <Compile Include="Ast\Expressions\UnaryOperator.cs" />
     <Compile Include="Ast\Location.cs" />
     <Compile Include="Ast\Statements\VariableDeclaration.cs" />
     <Compile Include="DynamicCompiling\Compiler.cs" />

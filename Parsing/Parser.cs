@@ -184,19 +184,19 @@ namespace Lab3.Parsing {
 			return left;
 		}
 		IExpression ParseMultiplicativeExpression() {
-			var left = ParsePrimary();
+			var left = ParseUnary();
 			while (true) {
 				var children = new List<INode> { left };
 				if (SkipIf("*", children)) {
-					var right = AddChild(ParsePrimary(), children);
+					var right = AddChild(ParseUnary(), children);
 					left = CheckNode(new Binary(children, left, BinaryOperator.Multiplication, right));
 				}
 				else if (SkipIf("/", children)) {
-					var right = AddChild(ParsePrimary(), children);
+					var right = AddChild(ParseUnary(), children);
 					left = CheckNode(new Binary(children, left, BinaryOperator.Division, right));
 				}
 				else if (SkipIf("%", children)) {
-					var right = AddChild(ParsePrimary(), children);
+					var right = AddChild(ParseUnary(), children);
 					left = CheckNode(new Binary(children, left, BinaryOperator.Remainder, right));
 				}
 				else {
@@ -204,6 +204,26 @@ namespace Lab3.Parsing {
 				}
 			}
 			return left;
+		}
+		IExpression ParseUnary() {
+			var children = new List<INode>();
+			if (SkipIf("+", children)) {
+				var expr = AddChild(ParseUnary(), children);
+				return CheckNode(new Unary(children, UnaryOperator.UnaryPlus, expr));
+			}
+			if (SkipIf("-", children)) {
+				var expr = AddChild(ParseUnary(), children);
+				return CheckNode(new Unary(children, UnaryOperator.UnaryMinus, expr));
+			}
+			if (SkipIf("~", children)) {
+				var expr = AddChild(ParseUnary(), children);
+				return CheckNode(new Unary(children, UnaryOperator.BitwiseNegation, expr));
+			}
+			if (SkipIf("!", children)) {
+				var expr = AddChild(ParseUnary(), children);
+				return CheckNode(new Unary(children, UnaryOperator.LogicalNegation, expr));
+			}
+			return ParsePrimary();
 		}
 		IExpression ParsePrimary() {
 			var expression = ParsePrimitive();

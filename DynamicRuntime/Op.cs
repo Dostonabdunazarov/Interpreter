@@ -16,6 +16,18 @@ namespace DynamicRuntime {
 		public static object Rem(object a, object b) {
 			return To<int>(a) % To<int>(b);
 		}
+		public static object UnaryPlus(object a) {
+			return To<int>(a);
+		}
+		public static object UnaryMinus(object a) {
+			return -To<int>(a);
+		}
+		public static object BitwiseNegation(object a) {
+			return ~To<int>(a);
+		}
+		public static object LogicalNegation(object a) {
+			return !ToBool(a);
+		}
 		public static object Eq(object a, object b) {
 			if (a == null) {
 				return b == null;
